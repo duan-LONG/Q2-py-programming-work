@@ -1,0 +1,134 @@
+"Here is a record of me completing my homework alone:"
+"the record time is November 6, 2024 at 19:48 pm, I completed "
+"the second question and tested all the correct answers. "
+"I uploaded this py file to my github to prove that this file was written by myself."
+"If it is found that my code is highly overlapping with someone else's, " \
+"there is no doubt that someone else has stolen my answers, and this PY file, " \
+"along with GitHub history and time logs, will be used as evidence in " \
+"the academic misconduct hearing. My name is Xinjie WU 学号20624223."
+class Card:
+    def __init__(self, colour, number):
+        assert isinstance(number, int)
+        self.colour = colour
+        self.number = number
+
+    def __str__(self):
+        return f'{self.colour} {self.number}'
+
+
+class CollectionOfCards:
+    """
+    该类表示一组卡片，并提供了验证卡片组是否合法及寻找合法卡片组的功能。
+    """
+
+    def __init__(self, card_strings):
+        """
+        构造函数，将输入的字符串列表转换为 Card 对象并初始化 collection。
+        :param card_strings: 字符串列表，格式为 '颜色 数字'（例如 'red 1'）。
+        """
+        self.collection = [Card(colour, int(number)) for colour, number in (card.split() for card in card_strings)]
+
+    def find_valid_group(self):
+        """
+        在集合中寻找一个有效的卡片组。
+        :return: 如果找到有效组，返回一个 Card 对象列表；如果找不到，返回 None。
+        """
+        n = len(self.collection)
+        for i in range(n):
+            for j in range(i + 3, n + 1):  # 至少要有三个卡片才可能形成有效组
+                group = self.collection[i:j]
+                if CollectionOfCards([str(card) for card in group]).is_valid_group():
+                    return group
+        return None
+
+    def is_valid_group(self):
+        """
+        验证 collection 中的卡片是否构成一个有效组。
+        有效组的规则：
+        - 组中的卡片数必须至少为三张；
+        - 至少三张颜色相同且数字连续的牌；
+        - 至少三张数字相同且颜色不同的牌（且颜色不重复）；
+        - 至少四张数字相同且颜色不同的牌（且颜色不重复）。
+
+        :return: 如果 collection 构成合法组返回 True，否则返回 False。
+        """
+        if len(self.collection) < 3:
+            return False  # 牌数少于三张直接返回 False
+
+        # 检查是否是颜色相同且数字连续的组
+        same_colour = all(card.colour == self.collection[0].colour for card in self.collection)
+        if same_colour:
+            numbers = sorted(card.number for card in self.collection)
+            consecutive = all(numbers[i] + 1 == numbers[i + 1] for i in range(len(numbers) - 1))
+            if consecutive:
+                # print("@1")
+                return True
+
+        # 检查是否是数字相同且颜色不同的组（至少三张卡片）
+        same_number = all(card.number == self.collection[0].number for card in self.collection)
+        if same_number:
+            colours = {card.colour for card in self.collection}
+            if len(colours) == len(self.collection):  # 确保没有重复颜色
+                # print("@2")
+                return True
+
+        # 检查是否是四张数字相同且颜色不同的组（至少四张卡片）
+        if len(self.collection) > 3:
+            same_number = all(card.number == self.collection[0].number for card in self.collection)
+            if same_number:
+                colours = {card.colour for card in self.collection}
+                if len(colours) == 4:  # 确保四张卡片颜色不同
+                    # print("@3")
+                    return True
+
+        return False
+
+    def find_largest_valid_group(self):
+        """
+        在集合中寻找最大的有效卡片组。如果存在多个大小相同的最大有效卡片组，则返回其中任何一个。
+        :return: 如果找到最大的有效组，返回一个 Card 对象列表；如果找不到，返回 None。
+        """
+        n = len(self.collection)
+        largest_group = None
+        max_size = 0
+
+        # 遍历所有可能的长度为 3 的组合
+        # print("Checking groups with 3 cards")
+        for i in range(n):
+            for j in range(i + 1, n):
+                for k in range(j + 1, n):  # 三张卡片的组合
+                    group = [self.collection[i], self.collection[j], self.collection[k]]
+                    # print("Group:", ", ".join(str(card) for card in group))
+
+                    # 检查这个组是否有效
+                    if CollectionOfCards([str(card) for card in group]).is_valid_group():
+                        group_size = len(group)
+                        if group_size > max_size:
+                            largest_group = group
+                            max_size = group_size
+                            # print("New max size:", max_size)
+
+        # 遍历所有可能的长度为 4 的组合
+        # print("Checking groups with 4 cards")
+        for i in range(n):
+            for j in range(i + 1, n):
+                for k in range(j + 1, n):
+                    for l in range(k + 1, n):  # 四张卡片的组合
+                        group = [self.collection[i], self.collection[j], self.collection[k], self.collection[l]]
+                        # print("Group:", ", ".join(str(card) for card in group))
+
+                        # 检查这个组是否有效
+                        if CollectionOfCards([str(card) for card in group]).is_valid_group():
+                            group_size = len(group)
+                            if group_size > max_size:
+                                largest_group = group
+                                max_size = group_size
+                                # print("New max size:", max_size)
+
+        return [str(card) for card in largest_group] if largest_group else None
+
+
+# 测试代码
+result = CollectionOfCards(['red 6', 'blue 6', 'yellow 6', 'green 7', 'green 6', 'green 5']).find_largest_valid_group()
+print("最后结果")
+print(result)  # 输出应该是 ['red 6', 'blue 6', 'yellow 6', 'green 6']
